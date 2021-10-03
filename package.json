@@ -44,7 +44,11 @@
 		"progress",
 		"busy",
 		"wait",
-		"idle"
+		"idle",
+		"legacy",
+		"mirror",
+		"commonjs",
+		"classic"
 	],
 	"dependencies": {
 		"bl": "^4.1.0",
