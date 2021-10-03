@@ -271,4 +271,8 @@ JavaScript is single-threaded, so synchronous operations blocks the thread, incl
 
 # Disclaimer
 
-[Disclaimer goes here]
+This repository is a fork of the [ora](https://www.npmjs.com/package/ora) package for Node JS. It mirrors the final version (5.4.1, June 2021) before transitioning from the CommonJS syntax to ESM (6.0.0, August 2021). The original work is licensed under MIT and as such, I claim no personal copyright for this publishing. All credit should go to the original developer [@sindresorhus](https://github.com/sindresorhus).
+
+I am not trying to promote this over the original package. Rather, I am encouraging freedom of choice between the classic 'CommonJS' syntax and the emerging 'ESM' syntax. I have published this as a separate package under a distinct name in order to help developers make informed decisions when managing their dependencies. If you are not ready to transition to ESM and don't want to have to tiptoe around ora's recent updates, you can download this instead.
+
+This is only a legacy publication and not an official project. I have never worked directly on the 'ora' library. I have absolutely no affiliation with[@sindresorhus](https://github.com/sindresorhus) as a developer, or any of their contributors. Since this is only a mirror of a previous version, I will not be actively maintaining this repository. However, I cannot guarantee that this will work in the future. If something does break, I will try my best to fix it. Hopefully we will have all transitioned to ESM by the time that does actually happen.
