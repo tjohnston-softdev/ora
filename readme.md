@@ -1,4 +1,8 @@
-# ora
+# ora-classic
+
+Legacy mirror of the [ora](https://www.npmjs.com/package/ora) package version 5.4.1. This was the last version to use the CommonJS syntax before switching to [pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
+
+---
 
 > Elegant terminal spinner
 
@@ -11,13 +15,13 @@
 ## Install
 
 ```
-$ npm install ora
+$ npm install ora-classic
 ```
 
 ## Usage
 
 ```js
-const ora = require('ora');
+const ora = require('ora-classic');
 
 const spinner = ora('Loading unicorns').start();
 
@@ -262,3 +266,4 @@ JavaScript is single-threaded, so synchronous operations blocks the thread, incl
 - [observablehq.com/@victordidenko/ora](https://observablehq.com/@victordidenko/ora) - Ora port to Observable notebooks
 - [spinnies](https://github.com/jcarpanelli/spinnies) - Terminal multi-spinner library for Node.js
 - [kia](https://github.com/HarryPeach/kia) - Simple terminal spinners for Deno 🦕
+
