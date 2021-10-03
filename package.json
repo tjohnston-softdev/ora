@@ -1,15 +1,25 @@
 {
-	"name": "ora",
+	"name": "ora-classic",
 	"version": "5.4.1",
 	"description": "Elegant terminal spinner",
 	"license": "MIT",
-	"repository": "sindresorhus/ora",
+	"repository": "tjohnston-softdev/ora",
 	"funding": "https://github.com/sponsors/sindresorhus",
-	"author": {
-		"name": "Sindre Sorhus",
-		"email": "sindresorhus@gmail.com",
-		"url": "https://sindresorhus.com"
-	},
+	"contributors":
+	[
+		{
+			"name": "Sindre Sorhus",
+			"role": "Original developer",
+			"email": "sindresorhus@gmail.com",
+			"url": "https://sindresorhus.com"
+		},
+		{
+			"name": "Tyrone Johnston",
+			"role": "Legacy publisher",
+			"email": "REDACTED",
+			"url": "https://github.com/tjohnston-softdev"
+		}
+	],
 	"engines": {
 		"node": ">=10"
 	},
