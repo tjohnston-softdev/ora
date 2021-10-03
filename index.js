@@ -1,20 +1,18 @@
-import process from 'node:process';
-import readline from 'node:readline';
-import chalk from 'chalk';
-import cliCursor from 'cli-cursor';
-import cliSpinners from 'cli-spinners';
-import logSymbols from 'log-symbols';
-import stripAnsi from 'strip-ansi';
-import wcwidth from 'wcwidth';
-import isInteractive from 'is-interactive';
-import isUnicodeSupported from 'is-unicode-supported';
-import {BufferListStream} from 'bl';
+'use strict';
+const readline = require('readline');
+const chalk = require('chalk');
+const cliCursor = require('cli-cursor');
+const cliSpinners = require('cli-spinners');
+const logSymbols = require('log-symbols');
+const stripAnsi = require('strip-ansi');
+const wcwidth = require('wcwidth');
+const isInteractive = require('is-interactive');
+const isUnicodeSupported = require('is-unicode-supported');
+const {BufferListStream} = require('bl');
 
 const TEXT = Symbol('text');
 const PREFIX_TEXT = Symbol('prefixText');
 const ASCII_ETX_CODE = 0x03; // Ctrl+C emits this code
-
-// TODO: Use class fields when ESLint 8 is out.
 
 class StdinDiscarder {
 	constructor() {
@@ -70,7 +68,7 @@ class StdinDiscarder {
 
 		this.rl = readline.createInterface({
 			input: process.stdin,
-			output: this.mutedStream,
+			output: this.mutedStream
 		});
 
 		this.rl.on('SIGINT', () => {
@@ -103,7 +101,7 @@ class Ora {
 
 		if (typeof options === 'string') {
 			options = {
-				text: options,
+				text: options
 			};
 		}
 
@@ -112,7 +110,7 @@ class Ora {
 			color: 'cyan',
 			stream: process.stderr,
 			discardStdin: true,
-			...options,
+			...options
 		};
 
 		this.spinner = this.options.spinner;
@@ -144,7 +142,6 @@ class Ora {
 		}
 
 		this._indent = indent;
-		this.updateLineCount();
 	}
 
 	_updateInterval(interval) {
@@ -218,7 +215,7 @@ class Ora {
 		const columns = this.stream.columns || 80;
 		const fullPrefixText = this.getFullPrefixText(this.prefixText, '-');
 		this.lineCount = 0;
-		for (const line of stripAnsi(' '.repeat(this.indent) + fullPrefixText + '--' + this[TEXT]).split('\n')) {
+		for (const line of stripAnsi(fullPrefixText + '--' + this[TEXT]).split('\n')) {
 			this.lineCount += Math.max(1, Math.ceil(wcwidth(line) / columns));
 		}
 	}
@@ -267,21 +264,15 @@ class Ora {
 			return this;
 		}
 
-		this.stream.cursorTo(0);
-
-		for (let index = 0; index < this.linesToClear; index++) {
-			if (index > 0) {
+		for (let i = 0; i < this.linesToClear; i++) {
+			if (i > 0) {
 				this.stream.moveCursor(0, -1);
 			}
 
-			this.stream.clearLine(1);
-		}
-
-		if (this.indent || this.lastIndent !== this.indent) {
+			this.stream.clearLine();
 			this.stream.cursorTo(this.indent);
 		}
 
-		this.lastIndent = this.indent;
 		this.linesToClear = 0;
 
 		return this;
@@ -388,43 +379,29 @@ class Ora {
 	}
 }
 
-export default function ora(options) {
+const oraFactory = function (options) {
 	return new Ora(options);
-}
+};
 
-export async function oraPromise(action, options) {
-	const actionIsFunction = typeof action === 'function';
+module.exports = oraFactory;
+
+module.exports.promise = (action, options) => {
 	// eslint-disable-next-line promise/prefer-await-to-then
-	const actionIsPromise = typeof action.then === 'function';
-
-	if (!actionIsFunction && !actionIsPromise) {
-		throw new TypeError('Parameter `action` must be a Function or a Promise');
+	if (typeof action.then !== 'function') {
+		throw new TypeError('Parameter `action` must be a Promise');
 	}
 
-	const {successText, failText} = typeof options === 'object'
-		? options
-		: {successText: undefined, failText: undefined};
+	const spinner = new Ora(options);
+	spinner.start();
 
-	const spinner = ora(options).start();
+	(async () => {
+		try {
+			await action;
+			spinner.succeed();
+		} catch {
+			spinner.fail();
+		}
+	})();
 
-	try {
-		const promise = actionIsFunction ? action(spinner) : action;
-		const result = await promise;
-
-		spinner.succeed(
-			successText === undefined
-				? undefined
-				: (typeof successText === 'string' ? successText : successText(result)),
-		);
-
-		return result;
-	} catch (error) {
-		spinner.fail(
-			failText === undefined
-				? undefined
-				: (typeof failText === 'string' ? failText : failText(error)),
-		);
-
-		throw error;
-	}
-}
+	return spinner;
+};

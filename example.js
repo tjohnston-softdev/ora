@@ -1,16 +1,16 @@
-import process from 'node:process';
-import chalk from 'chalk';
-import ora from './index.js';
+'use strict';
+const chalk = require('chalk');
+const Ora = require('.');
 
-const spinner = ora({
+const spinner = new Ora({
 	discardStdin: false,
 	text: 'Loading unicorns, not discarding stdin',
-	spinner: process.argv[2],
+	spinner: process.argv[2]
 });
 
-const spinnerDiscardingStdin = ora({
+const spinnerDiscardingStdin = new Ora({
 	text: 'Loading unicorns',
-	spinner: process.argv[2],
+	spinner: process.argv[2]
 });
 
 spinnerDiscardingStdin.start();

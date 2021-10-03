@@ -1,11 +1,8 @@
-import process from 'node:process';
-import {PassThrough as PassThroughStream} from 'node:stream';
+import {PassThrough as PassThroughStream} from 'stream';
 import getStream from 'get-stream';
 import test from 'ava';
 import stripAnsi from 'strip-ansi';
-import TransformTTY from 'transform-tty';
-import cliSpinners from 'cli-spinners';
-import ora, {oraPromise} from './index.js';
+import Ora from './index.js';
 
 const spinnerCharacter = process.platform === 'win32' ? '-' : '⠋';
 const noop = () => {};
@@ -22,13 +19,13 @@ const doSpinner = async (fn, extraOptions = {}) => {
 	const stream = getPassThroughStream();
 	const output = getStream(stream);
 
-	const spinner = ora({
+	const spinner = new Ora({
 		stream,
 		text: 'foo',
 		color: false,
 		isEnabled: true,
 		isSilent: false,
-		...extraOptions,
+		...extraOptions
 	});
 
 	spinner.start();
@@ -49,6 +46,7 @@ test('main', macro, spinner => {
 test('title shortcut', async t => {
 	const stream = getPassThroughStream();
 	const output = getStream(stream);
+	const ora = Ora;
 
 	const spinner = ora('foo');
 	spinner.stream = stream;
@@ -64,13 +62,13 @@ test('title shortcut', async t => {
 });
 
 test('`.id` is not set when created', t => {
-	const spinner = ora('foo');
+	const spinner = new Ora('foo');
 	t.falsy(spinner.id);
 	t.false(spinner.isSpinning);
 });
 
 test('ignore consecutive calls to `.start()`', t => {
-	const spinner = ora('foo');
+	const spinner = new Ora('foo');
 	spinner.start();
 	const {id} = spinner;
 	spinner.start();
@@ -78,10 +76,10 @@ test('ignore consecutive calls to `.start()`', t => {
 });
 
 test('chain call to `.start()` with constructor', t => {
-	const spinner = ora({
+	const spinner = new Ora({
 		stream: getPassThroughStream(),
 		text: 'foo',
-		isEnabled: true,
+		isEnabled: true
 	}).start();
 
 	t.truthy(spinner.id);
@@ -146,16 +144,16 @@ test('.stopAndPersist() - isSilent:true can be disabled', macro, spinner => {
 	spinner.stopAndPersist({symbol: '@', text: 'all done'});
 }, /@ all done\n$/, {isSilent: true});
 
-test('oraPromise() - resolves', async t => {
+test('.promise() - resolves', async t => {
 	const stream = getPassThroughStream();
 	const output = getStream(stream);
 	const resolves = Promise.resolve(1);
 
-	oraPromise(resolves, {
+	Ora.promise(resolves, {
 		stream,
 		text: 'foo',
 		color: false,
-		isEnabled: true,
+		isEnabled: true
 	});
 
 	await resolves;
@@ -164,18 +162,20 @@ test('oraPromise() - resolves', async t => {
 	t.regex(stripAnsi(await output), /[√✔] foo\n$/);
 });
 
-test('oraPromise() - rejects', async t => {
+test('.promise() - rejects', async t => {
 	const stream = getPassThroughStream();
 	const output = getStream(stream);
 	const rejects = Promise.reject(new Error()); // eslint-disable-line unicorn/error-message
 
+	Ora.promise(rejects, {
+		stream,
+		text: 'foo',
+		color: false,
+		isEnabled: true
+	});
+
 	try {
-		await oraPromise(rejects, {
-			stream,
-			text: 'foo',
-			color: false,
-			isEnabled: true,
-		});
+		await rejects;
 	} catch {}
 
 	stream.end();
@@ -202,11 +202,11 @@ test('erases wrapped lines', t => {
 		cursorAtRow = 0;
 	};
 
-	const spinner = ora({
+	const spinner = new Ora({
 		stream,
 		text: 'foo',
 		color: false,
-		isEnabled: true,
+		isEnabled: true
 	});
 
 	spinner.render();
@@ -265,10 +265,10 @@ test('reset frameIndex when setting new spinner', async t => {
 	const stream = getPassThroughStream();
 	const output = getStream(stream);
 
-	const spinner = ora({
+	const spinner = new Ora({
 		stream,
 		isEnabled: true,
-		spinner: {frames: ['foo', 'fooo']},
+		spinner: {frames: ['foo', 'fooo']}
 	});
 
 	spinner.render();
@@ -284,10 +284,10 @@ test('reset frameIndex when setting new spinner', async t => {
 });
 
 test('set the correct interval when changing spinner (object case)', t => {
-	const spinner = ora({
+	const spinner = new Ora({
 		isEnabled: false,
 		spinner: {frames: ['foo', 'bar']},
-		interval: 300,
+		interval: 300
 	});
 
 	t.is(spinner.interval, 300);
@@ -298,10 +298,10 @@ test('set the correct interval when changing spinner (object case)', t => {
 });
 
 test('set the correct interval when changing spinner (string case)', t => {
-	const spinner = ora({
+	const spinner = new Ora({
 		isEnabled: false,
 		spinner: 'dots',
-		interval: 100,
+		interval: 100
 	});
 
 	t.is(spinner.interval, 100);
@@ -314,22 +314,18 @@ test('set the correct interval when changing spinner (string case)', t => {
 
 if (process.platform !== 'win32') {
 	test('throw when incorrect spinner', t => {
-		const spinner = ora();
+		const ora = new Ora();
 
 		t.throws(() => {
-			spinner.spinner = 'random-string-12345';
-		}, {
-			message: /no built-in spinner/,
-		});
+			ora.spinner = 'random-string-12345';
+		}, /no built-in spinner/);
 	});
 }
 
 test('throw when spinner is set to `default`', t => {
 	t.throws(() => {
-		ora({spinner: 'default'});
-	}, {
-		message: /no built-in spinner/,
-	});
+		new Ora({spinner: 'default'}); // eslint-disable-line no-new
+	}, /no built-in spinner/);
 });
 
 test('indent option', t => {
@@ -340,12 +336,12 @@ test('indent option', t => {
 		cursorAtRow = indent;
 	};
 
-	const spinner = ora({
+	const spinner = new Ora({
 		stream,
 		text: 'foo',
 		color: false,
 		isEnabled: true,
-		indent: 7,
+		indent: 7
 	});
 
 	spinner.render();
@@ -357,39 +353,16 @@ test('indent option', t => {
 test('indent option throws', t => {
 	const stream = getPassThroughStream();
 
-	const spinner = ora({
+	const spinner = new Ora({
 		stream,
 		text: 'foo',
 		color: false,
-		isEnabled: true,
+		isEnabled: true
 	});
 
 	t.throws(() => {
 		spinner.indent = -1;
-	}, {
-		message: 'The `indent` option must be an integer from 0 and up',
-	});
-});
-
-test('handles wrapped lines when length of indent + text is greater than columns', t => {
-	const stream = getPassThroughStream();
-	stream.isTTY = true;
-	stream.columns = 20;
-
-	const spinner = ora({
-		stream,
-		text: 'foo',
-		color: false,
-		isEnabled: true,
-	});
-
-	spinner.render();
-
-	spinner.text = '0'.repeat(spinner.stream.columns - 5);
-	spinner.indent = 15;
-	spinner.render();
-
-	t.is(spinner.lineCount, 2);
+	}, 'The `indent` option must be an integer from 0 and up');
 });
 
 test('.stopAndPersist() with prefixText', macro, spinner => {
@@ -411,551 +384,3 @@ test('.stopAndPersist() with manual empty prefixText', macro, spinner => {
 test('.stopAndPersist() with dynamic prefixText', macro, spinner => {
 	spinner.stopAndPersist({symbol: '&', prefixText: () => 'babeee', text: 'yorkie'});
 }, /babeee & yorkie\n$/, {prefixText: () => 'babeee'});
-
-// New clear method tests
-
-const currentClearMethod = transFormTTY => {
-	const spinner = ora({
-		text: 'foo',
-		color: false,
-		isEnabled: true,
-		stream: transFormTTY,
-		spinner: {
-			frames: [
-				'-',
-			],
-		},
-	});
-
-	let firstIndent = true;
-
-	spinner.clear = function () {
-		if (!this.isEnabled || !this.stream.isTTY) {
-			return this;
-		}
-
-		for (let index = 0; index < this.linesToClear; index++) {
-			if (index > 0) {
-				this.stream.moveCursor(0, -1);
-			}
-
-			this.stream.clearLine();
-			this.stream.cursorTo(this.indent);
-		}
-
-		// It's too quick to be noticeable, but indent does not get applied
-		// for the first render if `linesToClear === 0`. The new clear method
-		// doesn't have this issue, since it's called outside of the loop.
-		if (this.linesToClear === 0 && firstIndent && this.indent) {
-			this.stream.cursorTo(this.indent);
-			firstIndent = false;
-		}
-
-		this.linesToClear = 0;
-
-		return this;
-	}.bind(spinner);
-
-	return spinner;
-};
-
-test.serial('new clear method test, basic', t => {
-	const transformTTY = new TransformTTY({crlf: true});
-	transformTTY.addSequencer();
-	transformTTY.addSequencer(null, true);
-
-	/*
-	If the frames from this sequence differ from the previous sequence,
-	it means the `spinner.clear()` method has failed to fully clear output between calls to render.
-	*/
-
-	const currentClearTTY = new TransformTTY({crlf: true});
-	currentClearTTY.addSequencer();
-
-	const currentOra = currentClearMethod(currentClearTTY);
-
-	const spinner = ora({
-		text: 'foo',
-		color: false,
-		isEnabled: true,
-		stream: transformTTY,
-		spinner: {
-			frames: [
-				'-',
-			],
-		},
-	});
-
-	currentOra.render();
-	spinner.render();
-
-	currentOra.text = 'bar';
-	currentOra.indent = 5;
-	currentOra.render();
-
-	spinner.text = 'bar';
-	spinner.indent = 5;
-	spinner.render();
-
-	currentOra.text = 'baz';
-	currentOra.indent = 10;
-	currentOra.render();
-
-	spinner.text = 'baz';
-	spinner.indent = 10;
-	spinner.render();
-
-	currentOra.succeed('boz?');
-
-	spinner.succeed('boz?');
-
-	const [sequenceString, clearedSequenceString] = transformTTY.getSequenceStrings();
-	const [frames, clearedFrames] = transformTTY.getFrames();
-
-	t.is(sequenceString, '          ✔ boz?\n');
-	t.is(sequenceString, clearedSequenceString);
-
-	t.deepEqual(clearedFrames, ['- foo', '     - bar', '          - baz', '          ✔ boz?\n']);
-	t.deepEqual(frames, clearedFrames);
-
-	const currentString = currentClearTTY.getSequenceStrings();
-
-	t.is(currentString, '          ✔ boz?\n');
-
-	const currentFrames = currentClearTTY.getFrames();
-
-	t.deepEqual(frames, currentFrames);
-	// Frames created using new clear method are deep equal to frames created using current clear method
-});
-
-test('new clear method test, erases wrapped lines', t => {
-	const transformTTY = new TransformTTY({crlf: true, columns: 40});
-	transformTTY.addSequencer();
-	transformTTY.addSequencer(null, true);
-
-	const currentClearTTY = new TransformTTY({crlf: true, columns: 40});
-	currentClearTTY.addSequencer();
-
-	const currentOra = currentClearMethod(currentClearTTY);
-
-	const cursorAtRow = () => {
-		const cursor = transformTTY.getCursorPos();
-		return cursor.y === 0 ? 0 : cursor.y * -1;
-	};
-
-	const clearedLines = () => transformTTY.toString().split('\n').length;
-
-	const spinner = ora({
-		text: 'foo',
-		color: false,
-		isEnabled: true,
-		stream: transformTTY,
-		spinner: {
-			frames: [
-				'-',
-			],
-		},
-	});
-
-	currentOra.render();
-
-	spinner.render();
-	t.is(clearedLines(), 1); // Cleared 'foo'
-	t.is(cursorAtRow(), 0);
-
-	currentOra.text = 'foo\n\nbar';
-	currentOra.render();
-
-	spinner.text = 'foo\n\nbar';
-	spinner.render();
-	t.is(clearedLines(), 3); // Cleared 'foo\n\nbar'
-	t.is(cursorAtRow(), -2);
-
-	currentOra.clear();
-	currentOra.text = '0'.repeat(currentOra.stream.columns + 10);
-	currentOra.render();
-	currentOra.render();
-
-	spinner.clear();
-	spinner.text = '0'.repeat(spinner.stream.columns + 10);
-	spinner.render();
-	spinner.render();
-	t.is(clearedLines(), 2);
-	t.is(cursorAtRow(), -1);
-
-	currentOra.clear();
-	currentOra.text = '🦄'.repeat(currentOra.stream.columns + 10);
-	currentOra.render();
-	currentOra.render();
-
-	spinner.clear();
-	spinner.text = '🦄'.repeat(spinner.stream.columns + 10);
-	spinner.render();
-	spinner.render();
-	t.is(clearedLines(), 3);
-	t.is(cursorAtRow(), -2);
-
-	currentOra.clear();
-	currentOra.text = '🦄'.repeat(currentOra.stream.columns - 2) + '\nfoo';
-	currentOra.render();
-	currentOra.render();
-
-	spinner.clear();
-	spinner.text = '🦄'.repeat(spinner.stream.columns - 2) + '\nfoo';
-	spinner.render();
-	spinner.render();
-	t.is(clearedLines(), 3);
-	t.is(cursorAtRow(), -2);
-
-	currentOra.clear();
-	currentOra.prefixText = 'foo\n';
-	currentOra.text = '\nbar';
-	currentOra.render();
-	currentOra.render();
-
-	spinner.clear();
-	spinner.prefixText = 'foo\n';
-	spinner.text = '\nbar';
-	spinner.render();
-	spinner.render();
-	t.is(clearedLines(), 3); // Cleared 'foo\n\nbar'
-	t.is(cursorAtRow(), -2);
-
-	const [sequenceString, clearedSequenceString] = transformTTY.getSequenceStrings();
-	const [frames, clearedFrames] = transformTTY.getFrames();
-
-	t.is(sequenceString, 'foo\n - \nbar');
-	t.is(sequenceString, clearedSequenceString);
-
-	t.deepEqual(clearedFrames, [
-		'- foo',
-		'- foo\n\nbar',
-		'- 00000000000000000000000000000000000000\n000000000000',
-		'- 00000000000000000000000000000000000000\n000000000000',
-		'- 🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ '🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ '🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄',
-		'- 🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ '🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ '🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄',
-		'- 🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ '🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ 'foo',
-		'- 🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ '🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄🦄\n'
-			+ 'foo',
-		'foo\n - \nbar',
-		'foo\n - \nbar',
-	]);
-
-	t.deepEqual(frames, clearedFrames);
-
-	const currentClearString = currentClearTTY.toString();
-	t.is(currentClearString, 'foo\n - \nbar');
-
-	const currentFrames = currentClearTTY.getFrames();
-	t.deepEqual(frames, currentFrames);
-});
-
-test('new clear method, stress test', t => {
-	const rando = (min, max) => {
-		min = Math.ceil(min);
-		max = Math.floor(max);
-		return Math.floor(Math.random() * ((max - min) + min));
-	};
-
-	const rAnDoMaNiMaLs = (min, max) => {
-		const length = rando(min, max);
-		let result = '';
-		const THEAMINALS = ['🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐙', '🐵', '🐦', '🐧', '🐔', '🐒', '🙉', '🙈', '🐣', '🐥', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', ...Array.from({length: 5}).fill('\n')];
-
-		for (let i = 0; i < length; i++) {
-			result += THEAMINALS[Math.floor(Math.random() * THEAMINALS.length)];
-		}
-
-		return result;
-	};
-
-	const randos = () => rAnDoMaNiMaLs(rando(5, 15), rando(25, 50));
-
-	const randomize = (s1, s2) => {
-		const spnr = cliSpinners.random;
-		const txt = randos();
-		const indent = rando(0, 15);
-
-		s1.spinner = spnr;
-		s2.spinner = spnr;
-		s1.text = txt;
-		s2.text = txt;
-		s1.indent = indent;
-		s2.indent = indent;
-	};
-
-	const transformTTY = new TransformTTY({crlf: true});
-	transformTTY.addSequencer();
-	transformTTY.addSequencer(null, true);
-
-	const currentClearTTY = new TransformTTY({crlf: true});
-	currentClearTTY.addSequencer();
-
-	const currentOra = currentClearMethod(currentClearTTY);
-
-	const spinner = ora({
-		color: false,
-		isEnabled: true,
-		stream: transformTTY,
-	});
-
-	randomize(spinner, currentOra);
-
-	for (let x = 0; x < 100; x++) {
-		if (x % 10 === 0) {
-			randomize(spinner, currentOra);
-		}
-
-		if (x % 5 === 0) {
-			const indent = rando(0, 25);
-			spinner.indent = indent;
-			currentOra.indent = indent;
-		}
-
-		if (x % 15 === 0) {
-			let {text} = spinner;
-			const loops = rando(1, 10);
-
-			for (let x = 0; x < loops; x++) {
-				const pos = Math.floor(Math.random() * text.length);
-				text = text.slice(0, pos) + '\n' + text.slice(pos + 1);
-			}
-
-			spinner.text = text;
-			currentOra.text = text;
-		}
-
-		spinner.render();
-		currentOra.render();
-	}
-
-	spinner.succeed('🙉');
-	currentOra.succeed('🙉');
-
-	const currentFrames = currentClearTTY.getFrames();
-	const [frames, clearedFrames] = transformTTY.getFrames();
-
-	t.deepEqual(frames, clearedFrames);
-
-	t.deepEqual(frames.slice(0, currentFrames.length), currentFrames);
-
-	// Console.log(frames);
-	// console.log(clearFrames);
-});
-/*
-Example output:
-
-[
-  '               ▏ \n',
-  '               ▎ \n',
-  '               ▍ \n',
-  '               ▌ \n',
-  '               ▋ \n',
-  '               ▊ \n',
-  '               ▉ \n',
-  '               ▊ \n',
-  '               ▋ \n',
-  '               ▌ \n',
-  '   d ',
-  '   q ',
-  '   p ',
-  '   b ',
-  '   d ',
-  '                 q \n',
-  '                 p \n',
-  '                 b \n',
-  '                 d \n',
-  '                 q \n',
-  '                ◢ 🐗🐧🐥🐺🐵\n\n',
-  '                ◣ 🐗🐧🐥🐺🐵\n\n',
-  '                ◤ 🐗🐧🐥🐺🐵\n\n',
-  '                ◥ 🐗🐧🐥🐺🐵\n\n',
-  '                ◢ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◣ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◤ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◥ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◢ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◣ 🐗🐧🐥🐺🐵\n\n',
-  '      ⠋ \n�🐮�\n\n�\n',
-  '      ⠙ \n�🐮�\n\n�\n',
-  '      ⠹ \n�🐮�\n\n�\n',
-  '      ⠸ \n�🐮�\n\n�\n',
-  '      ⠼ \n�🐮�\n\n�\n',
-  '                 ⠴ \n�🐮�\n\n�\n',
-  '                 ⠦ \n�🐮�\n\n�\n',
-  '                 ⠧ \n�🐮�\n\n�\n',
-  '                 ⠇ \n�🐮�\n\n�\n',
-  '                 ⠏ \n�🐮�\n\n�\n',
-  '       □ ',
-  '       ■ ',
-  '       □ ',
-  '       ■ ',
-  '       □ ',
-  '           ■ \n',
-  '           □ \n',
-  '           ■ \n',
-  '           □ \n',
-  '           ■ \n',
-  '  .   🐗',
-  '  ..  🐗',
-  '  ... 🐗',
-  '      🐗',
-  '  .   🐗',
-  '               ..  🐗',
-  '               ... 🐗',
-  '                   🐗',
-  '               .   🐗',
-  '               ..  🐗',
-  ' ▖ 🐔\n🐸\n',
-  ' ▘ 🐔\n🐸\n',
-  ' ▝ 🐔\n🐸\n',
-  ' ▗ 🐔\n🐸\n',
-  ' ▖ 🐔\n🐸\n',
-  '  ▘ 🐔\n🐸\n',
-  '  ▝ 🐔\n🐸\n',
-  '  ▗ 🐔\n🐸\n',
-  '  ▖ 🐔\n🐸\n',
-  '  ▘ 🐔\n🐸\n',
-  '          ( ●    ) 🐔🐗',
-  '          (  ●   ) 🐔🐗',
-  '          (   ●  ) 🐔🐗',
-  '          (    ● ) 🐔🐗',
-  '          (     ●) 🐔🐗',
-  '(    ● ) �\n\n�',
-  '(   ●  ) �\n\n�',
-  '(  ●   ) �\n\n�',
-  '( ●    ) �\n\n�',
-  '(●     ) �\n\n�',
-  '     ⧇ 🐷🐛🐔🦁🐷🙉',
-  '     ⧆ 🐷🐛🐔🦁🐷🙉',
-  '     ⧇ 🐷🐛🐔🦁🐷🙉',
-  '     ⧆ 🐷🐛🐔🦁🐷🙉',
-  '     ⧇ 🐷🐛🐔🦁🐷🙉',
-  '       ⧆ 🐷🐛🐔🦁🐷🙉',
-  '       ⧇ 🐷🐛🐔🦁🐷🙉',
-  '       ⧆ 🐷🐛🐔🦁🐷🙉',
-  '       ⧇ 🐷🐛🐔🦁🐷🙉',
-  '       ⧆ 🐷🐛🐔🦁🐷🙉',
-  '                        _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        - 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        ` 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                  ` 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  "                  ' 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n",
-  '                  ´ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                  - 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                  _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  ... 1 more item
-]
-[
-  '               ▏ \n',
-  '               ▎ \n',
-  '               ▍ \n',
-  '               ▌ \n',
-  '               ▋ \n',
-  '               ▊ \n',
-  '               ▉ \n',
-  '               ▊ \n',
-  '               ▋ \n',
-  '               ▌ \n',
-  '   d ',
-  '   q ',
-  '   p ',
-  '   b ',
-  '   d ',
-  '                 q \n',
-  '                 p \n',
-  '                 b \n',
-  '                 d \n',
-  '                 q \n',
-  '                ◢ 🐗🐧🐥🐺🐵\n\n',
-  '                ◣ 🐗🐧🐥🐺🐵\n\n',
-  '                ◤ 🐗🐧🐥🐺🐵\n\n',
-  '                ◥ 🐗🐧🐥🐺🐵\n\n',
-  '                ◢ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◣ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◤ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◥ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◢ 🐗🐧🐥🐺🐵\n\n',
-  '                     ◣ 🐗🐧🐥🐺🐵\n\n',
-  '      ⠋ \n�🐮�\n\n�\n',
-  '      ⠙ \n�🐮�\n\n�\n',
-  '      ⠹ \n�🐮�\n\n�\n',
-  '      ⠸ \n�🐮�\n\n�\n',
-  '      ⠼ \n�🐮�\n\n�\n',
-  '                 ⠴ \n�🐮�\n\n�\n',
-  '                 ⠦ \n�🐮�\n\n�\n',
-  '                 ⠧ \n�🐮�\n\n�\n',
-  '                 ⠇ \n�🐮�\n\n�\n',
-  '                 ⠏ \n�🐮�\n\n�\n',
-  '       □ ',
-  '       ■ ',
-  '       □ ',
-  '       ■ ',
-  '       □ ',
-  '           ■ \n',
-  '           □ \n',
-  '           ■ \n',
-  '           □ \n',
-  '           ■ \n',
-  '  .   🐗',
-  '  ..  🐗',
-  '  ... 🐗',
-  '      🐗',
-  '  .   🐗',
-  '               ..  🐗',
-  '               ... 🐗',
-  '                   🐗',
-  '               .   🐗',
-  '               ..  🐗',
-  ' ▖ 🐔\n🐸\n',
-  ' ▘ 🐔\n🐸\n',
-  ' ▝ 🐔\n🐸\n',
-  ' ▗ 🐔\n🐸\n',
-  ' ▖ 🐔\n🐸\n',
-  '  ▘ 🐔\n🐸\n',
-  '  ▝ 🐔\n🐸\n',
-  '  ▗ 🐔\n🐸\n',
-  '  ▖ 🐔\n🐸\n',
-  '  ▘ 🐔\n🐸\n',
-  '          ( ●    ) 🐔🐗',
-  '          (  ●   ) 🐔🐗',
-  '          (   ●  ) 🐔🐗',
-  '          (    ● ) 🐔🐗',
-  '          (     ●) 🐔🐗',
-  '(    ● ) �\n\n�',
-  '(   ●  ) �\n\n�',
-  '(  ●   ) �\n\n�',
-  '( ●    ) �\n\n�',
-  '(●     ) �\n\n�',
-  '     ⧇ 🐷🐛🐔🦁🐷🙉',
-  '     ⧆ 🐷🐛🐔🦁🐷🙉',
-  '     ⧇ 🐷🐛🐔🦁🐷🙉',
-  '     ⧆ 🐷🐛🐔🦁🐷🙉',
-  '     ⧇ 🐷🐛🐔🦁🐷🙉',
-  '       ⧆ 🐷🐛🐔🦁🐷🙉',
-  '       ⧇ 🐷🐛🐔🦁🐷🙉',
-  '       ⧆ 🐷🐛🐔🦁🐷🙉',
-  '       ⧇ 🐷🐛🐔🦁🐷🙉',
-  '       ⧆ 🐷🐛🐔🦁🐷🙉',
-  '                        _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        - 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                        ` 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                  ` 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  "                  ' 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n",
-  '                  ´ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                  - 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  '                  _ 🐽🦄🐣\n🐣🐧🐔🦁🐦�\n',
-  ... 1 more item
-]
-*/
