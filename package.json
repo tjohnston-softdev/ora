@@ -1,6 +1,6 @@
 {
 	"name": "ora-classic",
-	"version": "5.4.1",
+	"version": "5.4.1.0",
 	"description": "Elegant terminal spinner",
 	"license": "MIT",
 	"repository": "tjohnston-softdev/ora",
