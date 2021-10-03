@@ -1,6 +1,6 @@
 # ora-classic
 
-Legacy mirror of the [ora](https://www.npmjs.com/package/ora) package version 5.4.1. This was the last version to use the CommonJS syntax before switching to [pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
+Legacy mirror of the [ora](https://www.npmjs.com/package/ora) package before it switched to the [pure ESM](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c) syntax in August 2021. I have decided to publish this as a separate package for those who are not ready to migrate, or explicitly need to use the classic syntax for compatibility reasons.
 
 ---
 
@@ -267,3 +267,8 @@ JavaScript is single-threaded, so synchronous operations blocks the thread, incl
 - [spinnies](https://github.com/jcarpanelli/spinnies) - Terminal multi-spinner library for Node.js
 - [kia](https://github.com/HarryPeach/kia) - Simple terminal spinners for Deno 🦕
 
+---
+
+# Disclaimer
+
+[Disclaimer goes here]
