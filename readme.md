@@ -276,3 +276,5 @@ This repository is a fork of the [ora](https://www.npmjs.com/package/ora) packag
 I am not trying to promote this over the original package. Rather, I am encouraging freedom of choice between the classic 'CommonJS' syntax and the emerging 'ESM' syntax. I have published this as a separate package under a distinct name in order to help developers make informed decisions when managing their dependencies. If you are not ready to transition to ESM and don't want to have to tiptoe around ora's recent updates, you can download this instead.
 
 This is only a legacy publication and not an official project. I have never worked directly on the 'ora' library. I have absolutely no affiliation with [@sindresorhus](https://github.com/sindresorhus) as a developer, or any of their contributors. Since this is only a mirror of a previous version, I will not be actively maintaining this repository. However, I cannot guarantee that this will work in the future. If something does break, I will try my best to fix it. Hopefully we will have all transitioned to ESM by the time that does actually happen.
+
+---
